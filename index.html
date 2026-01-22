@@ -169,6 +169,18 @@
             </select>
         </div>
         <div class="form-group">
+            <label for="name-era">ยุคสมัยของชื่อตัวละคร</label>
+            <select id="name-era" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                <option value="ancient">เก่า (โบราณ/ย้อนยุค/พีเรียด)</option>
+                <option value="classic">กลาง (คลาสสิก/ร่วมสมัย)</option>
+                <option value="modern">ใหม่ (ปัจจุบัน/สมจริง)</option>
+                <option value="greek">ตำนาน (กรีก/โรมัน/เทพนิยาย)</option>
+                <option value="chinese">จีน (กำลังภายใน/เทพเซียน)</option>
+                <option value="japanese">ญี่ปุ่น (อนิเมะ/มังงะ)</option>
+                <option value="future">ล่าสุด (อนาคต/แฟนตาซี/ล้ำยุค)</option>
+            </select>
+        </div>
+        <div class="form-group">
             <label for="total-chapters">จำนวนตอน (โดยประมาณ)</label>
             <input type="number" id="total-chapters" placeholder="เช่น 5, 10 (ไม่ระบุได้)" min="1">
         </div>
@@ -210,6 +222,7 @@
     let novelTitle = "";
     let novelGenre = "";
     let writingStyle = "literary";
+    let nameEra = "modern";
     let isStoryOnlyMode = true;
     let totalChapters = 0;
     let currentChapter = 1;
@@ -218,6 +231,7 @@
         novelTitle = document.getElementById('novel-title').value.trim();
         novelGenre = document.getElementById('novel-genre').value.trim();
         writingStyle = document.getElementById('writing-style').value;
+        nameEra = document.getElementById('name-era').value;
         const totalChaptersInput = document.getElementById('total-chapters').value;
         totalChapters = totalChaptersInput ? parseInt(totalChaptersInput) : 0;
         isStoryOnlyMode = document.getElementById('story-only-mode').checked;
@@ -261,6 +275,31 @@
    - ใส่อารมณ์ร่วมลงไปในการเล่าเรื่อง (Emotional & Relatable)`;
         }
 
+        let nameInstruction = "";
+        switch (nameEra) {
+            case 'ancient':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** บังคับใช้ชื่อแบบ **โบราณ/ย้อนยุค/พีเรียด** เท่านั้น (เช่น แม่หญิงการะเกด, ขุนเดช, ทองกวาว, หลวงเทพ) ห้ามใช้ชื่อสมัยใหม่เด็ดขาด";
+                break;
+            case 'classic':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** ใช้ชื่อแบบ **ไทยคลาสสิก/ร่วมสมัย** ที่ฟังดูไพเราะ สุภาพ (เช่น ปรานนท์, รินลดา, ก้องภพ, มณี) ไม่เก่าจนเป็นพีเรียดและไม่วัยรุ่นจนเกินไป";
+                break;
+            case 'modern':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** บังคับใช้ชื่อแบบ **คนยุคปัจจุบัน (2024+)** เท่านั้น! เน้นชื่อเล่นที่วัยรุ่น/คนทำงานยุคนี้ใช้จริง (เช่น บีม, พลอย, นนท์, เฟิร์ส, เกรซ, มิกซ์) ห้ามใช้ชื่อเชยๆ หรือชื่อโบราณ";
+                break;
+            case 'greek':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** ใช้ชื่อแบบ **ตำนานกรีก/โรมัน/เทพนิยายตะวันตก** (เช่น ซุส, อพอลโล, เฮเลน, อคิลลีส, ไดอาน่า, แอตลาส) ให้เข้ากับธีมเทพปกรณัม";
+                break;
+            case 'chinese':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** ใช้ชื่อแบบ **จีน (กำลังภายใน/เทพเซียน)** (เช่น หลี่มู่ไป๋, จางเหว่ย, เซียวเหลน, เฟยหง, ไป๋หลง) ให้ได้บรรยากาศยุทธภพ";
+                break;
+            case 'japanese':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** ใช้ชื่อแบบ **ญี่ปุ่น (อนิเมะ/มังงะ)** (เช่น ทานากะ, ซากุระ, เร็น, ยูมิ, ฮิโรชิ, คาซึยะ) ให้ได้ฟีลลิ่งการ์ตูนญี่ปุ่น";
+                break;
+            case 'future':
+                nameInstruction = "5. **การตั้งชื่อตัวละคร (สำคัญ):** ใช้ชื่อแบบ **ล้ำยุค/แฟนตาซี/อินเตอร์** ให้ดูแปลกใหม่ (เช่น เซน, ไอร่า, นีโอ, ซีโน่, ลูนา) หรือชื่อที่ไม่ค่อยพบในปัจจุบัน";
+                break;
+        }
+
         if (isStoryOnlyMode) {
             initialPrompt = `ฉันต้องการแต่งนิยาย
 ชื่อเรื่อง: ${novelTitle}
@@ -270,7 +309,8 @@
 1. ให้เขียน **เฉพาะเนื้อเรื่องนิยาย** เท่านั้น ตัดส่วนที่ไม่ใช่นิยายออกทั้งหมด
 ${styleInstruction}
 3. ห้ามมีคำทักทาย ห้ามเกริ่นนำ ห้ามถามกลับ เริ่มเล่าเรื่องทันที
-${lengthInstruction}`;
+${lengthInstruction}
+${nameInstruction}`;
         } else {
             initialPrompt = `ฉันต้องการแต่งนิยาย
 ชื่อเรื่อง: ${novelTitle}
@@ -278,6 +318,7 @@ ${lengthInstruction}`;
 ความยาว: ${totalChapters > 0 ? totalChapters + ' ตอน' : 'ไม่ระบุ'}
 
 สไตล์การเขียน: ${writingStyle === 'literary' ? 'ภาษาเทพ/วรรณกรรม' : 'ภาษาวัยรุ่น/ทันสมัย'}
+ยุคสมัยชื่อตัวละคร: ${nameEra}
 
 ช่วยเป็นคู่หูในการแต่งนิยายเรื่องนี้หน่อย เริ่มต้นด้วยการเสนอพล็อตเรื่องคร่าวๆ หรือฉากเปิดเรื่องที่น่าสนใจให้หน่อย`;
         }
