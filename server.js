@@ -16,7 +16,7 @@ app.post('/api/chat', async (req, res) => {
         const { prompt } = req.body;
         const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyDUvr5l01Va5p3pr8jvEK3_0aRT1EYUaGs'; // Fallback for local dev
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
