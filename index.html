@@ -5,40 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI ช่วยแต่งนิยาย</title>
     <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo 600 - Soft Modern Blue */
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6; /* Cool Gray 100 - Easy on eyes */
+            --card-bg: #ffffff;
+            --text-main: #374151; /* Gray 700 */
+            --text-light: #6b7280; /* Gray 500 */
+            --border-color: #e5e7eb;
+            --user-msg-bg: #4f46e5;
+            --user-msg-text: #ffffff;
+            --ai-msg-bg: #f9fafb; /* Very light gray */
+            --ai-msg-text: #111827; /* Gray 900 */
+            --font-main: 'Sarabun', sans-serif;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
         body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: #f0f2f5;
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             height: 100vh;
+            color: var(--text-main);
         }
 
         .container {
             width: 100%;
-            max-width: 600px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px; /* Wider for better reading experience */
+            background-color: var(--card-bg);
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
+        }
+
+        @media (min-width: 800px) {
+            .container {
+                height: 95vh;
+                margin-top: 2.5vh;
+                border-radius: 20px;
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
+            }
         }
 
         header {
-            background-color: #4a90e2;
-            color: white;
-            padding: 15px;
+            background-color: var(--card-bg);
+            color: var(--primary-color);
+            padding: 20px;
             text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1.5rem;
+            font-weight: 800;
+            border-bottom: 1px solid var(--border-color);
+            /* box-shadow: var(--shadow-sm); Remove shadow for cleaner look */
+            z-index: 10;
         }
 
         #setup-section {
-            padding: 20px;
+            padding: 40px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 24px;
+            overflow-y: auto;
         }
 
         #chat-section {
@@ -46,102 +78,197 @@
             flex-direction: column;
             flex: 1;
             overflow: hidden;
+            background-color: #ffffff;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         label {
-            font-weight: bold;
-            color: #333;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
         }
 
-        input[type="text"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        input[type="text"], input[type="number"], select {
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             font-size: 1rem;
+            font-family: var(--font-main);
+            transition: all 0.2s ease;
+            background-color: #f9fafb;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         button {
-            padding: 10px;
-            background-color: #4a90e2;
+            padding: 14px;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1rem;
-            transition: background-color 0.3s;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
         }
 
         button:hover {
-            background-color: #357abd;
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        button:active {
+            transform: translateY(0);
         }
 
         #chat-history {
             flex: 1;
-            padding: 15px;
+            padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            background-color: #e5ddd5;
+            gap: 20px;
+            background-color: #ffffff; /* Clean white for reading */
+            scroll-behavior: smooth;
         }
 
         .message {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-radius: 10px;
-            line-height: 1.5;
+            max-width: 85%;
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.8; /* High line height for comfortable reading */
+            font-size: 1.05rem;
+            position: relative;
             word-wrap: break-word;
         }
 
         .user-message {
             align-self: flex-end;
-            background-color: #dcf8c6;
-            color: #000;
-            border-bottom-right-radius: 2px;
+            background-color: var(--user-msg-bg);
+            color: var(--user-msg-text);
+            border-bottom-right-radius: 4px;
+            box-shadow: var(--shadow-sm);
         }
 
         .ai-message {
             align-self: flex-start;
-            background-color: #fff;
-            color: #000;
-            border-bottom-left-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background-color: var(--ai-msg-bg);
+            color: var(--ai-msg-text);
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
         }
 
         .input-area {
-            padding: 10px;
-            background-color: #f0f0f0;
+            padding: 20px;
+            background-color: var(--card-bg);
             display: flex;
-            gap: 10px;
-            border-top: 1px solid #ddd;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            align-items: flex-end;
         }
 
         #user-input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
             outline: none;
+            background-color: #f9fafb;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        #user-input:focus {
+            background-color: #ffffff;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .loading {
             align-self: center;
-            color: #666;
+            color: var(--text-light);
             font-size: 0.9rem;
-            margin-top: 5px;
+            margin-top: 10px;
             display: none;
+            font-style: italic;
         }
         
-        /* Markdown style basic support */
-        .ai-message p { margin: 0 0 10px 0; }
+        /* Markdown Styling */
+        .ai-message p { margin: 0 0 16px 0; }
         .ai-message p:last-child { margin-bottom: 0; }
-        .ai-message strong { font-weight: bold; }
+        .ai-message strong { font-weight: 700; color: #000; }
+        .ai-message em { font-style: italic; color: #4b5563; }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Controls Area in Chat */
+        .chat-header-controls {
+            padding: 12px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            backdrop-filter: blur(10px); /* Glassmorphism if supported */
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .story-btn {
+            background-color: #f59e0b; /* Amber 500 */
+            color: white;
+        }
+        .story-btn:hover { background-color: #d97706; }
+        
+        .chapter-btn {
+            background-color: #0ea5e9; /* Sky 500 */
+            color: white;
+        }
+        .chapter-btn:hover { background-color: #0284c7; }
+
+        .save-btn { background-color: #10b981; } /* Emerald 500 */
+        .save-btn:hover { background-color: #059669; }
+        
+        .reset-btn { background-color: #ef4444; } /* Red 500 */
+        .reset-btn:hover { background-color: #dc2626; }
+
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <!-- Import Markdown parser -->
@@ -163,14 +290,14 @@
         </div>
         <div class="form-group">
             <label for="writing-style">สไตล์การเขียน</label>
-            <select id="writing-style" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+            <select id="writing-style">
                 <option value="literary">ภาษาเทพ (วรรณกรรม/สละสลวย)</option>
                 <option value="teen">ภาษาวัยรุ่น (ทันสมัย/เป็นกันเอง)</option>
             </select>
         </div>
         <div class="form-group">
             <label for="name-era">ยุคสมัยของชื่อตัวละคร</label>
-            <select id="name-era" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+            <select id="name-era">
                 <option value="ancient">เก่า (โบราณ/ย้อนยุค/พีเรียด)</option>
                 <option value="classic">กลาง (คลาสสิก/ร่วมสมัย)</option>
                 <option value="modern">ใหม่ (ปัจจุบัน/สมจริง)</option>
@@ -185,29 +312,29 @@
             <input type="number" id="total-chapters" placeholder="เช่น 5, 10 (ไม่ระบุได้)" min="1">
         </div>
         <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
-            <input type="checkbox" id="story-only-mode" checked style="width: auto; margin: 0;">
+            <input type="checkbox" id="story-only-mode" checked style="width: auto; margin: 0; cursor: pointer;">
             <label for="story-only-mode" style="font-weight: normal; cursor: pointer;">โหมดเนื้อเรื่องล้วน (ไม่คุยเล่น/ไม่เกริ่นนำ)</label>
         </div>
-        <button onclick="startChat()">เริ่มแต่งนิยาย</button>
+        <button onclick="startChat()" style="margin-top: 10px;">✨ เริ่มแต่งนิยาย</button>
     </div>
 
     <div id="chat-section">
-        <div class="chat-header-controls" style="padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-            <div id="chapter-status" style="font-weight: bold; color: #4a90e2;"></div>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="exportChat()" style="background-color: #28a745; padding: 5px 10px; font-size: 0.9rem;">💾 บันทึก</button>
-                <button onclick="resetChat()" style="background-color: #dc3545; padding: 5px 10px; font-size: 0.9rem;">🔄 เริ่มใหม่</button>
+        <div class="chat-header-controls">
+            <div id="chapter-status" style="font-weight: 700; color: var(--primary-color);"></div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="exportChat()" class="control-btn save-btn">💾 บันทึก</button>
+                <button onclick="resetChat()" class="control-btn reset-btn">🔄 เริ่มใหม่</button>
             </div>
         </div>
         <div id="chat-history"></div>
-        <div class="loading" id="loading-indicator">กำลังพิมพ์...</div>
+        <div class="loading" id="loading-indicator">✨ กำลังรังสรรค์เรื่องราว...</div>
         <div class="input-area">
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <button onclick="continueStory()" style="background-color: #ffc107; color: #333; font-weight: bold; font-size: 0.8rem;">⏩ แต่งต่อ (ฉากเดิม)</button>
-                <button onclick="nextChapter()" id="next-chapter-btn" style="background-color: #17a2b8; color: white; font-weight: bold; font-size: 0.8rem;">⏭️ ขึ้นตอนใหม่</button>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button onclick="continueStory()" class="control-btn story-btn">⏩ แต่งต่อ</button>
+                <button onclick="nextChapter()" id="next-chapter-btn" class="control-btn chapter-btn">⏭️ ขึ้นตอนใหม่</button>
             </div>
-            <input type="text" id="user-input" placeholder="พิมพ์ข้อความ..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">ส่ง</button>
+            <input type="text" id="user-input" placeholder="พิมพ์คำสั่ง หรือเนื้อเรื่องที่อยากให้แต่ง..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" style="padding: 14px 24px;">ส่ง</button>
         </div>
     </div>
 </div>
