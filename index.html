@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI ช่วยแต่งนิยาย</title>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #setup-section {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #chat-section {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        #chat-history {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #e5ddd5;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #dcf8c6;
+            color: #000;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background-color: #fff;
+            color: #000;
+            border-bottom-left-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .input-area {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .loading {
+            align-self: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* Markdown style basic support */
+        .ai-message p { margin: 0 0 10px 0; }
+        .ai-message p:last-child { margin-bottom: 0; }
+        .ai-message strong { font-weight: bold; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Import Markdown parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>AI ผู้ช่วยแต่งนิยาย</header>
+
+    <div id="setup-section">
+        <div class="form-group">
+            <label for="novel-title">ชื่อเรื่อง</label>
+            <input type="text" id="novel-title" placeholder="ใส่ชื่อนิยายของคุณ...">
+        </div>
+        <div class="form-group">
+            <label for="novel-genre">แนวเรื่อง</label>
+            <input type="text" id="novel-genre" placeholder="เช่น แฟนตาซี, รักโรแมนติก, สืบสวน...">
+        </div>
+        <div class="form-group">
+            <label for="writing-style">สไตล์การเขียน</label>
+            <select id="writing-style" style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 1rem;">
+                <option value="literary">ภาษาเทพ (วรรณกรรม/สละสลวย)</option>
+                <option value="teen">ภาษาวัยรุ่น (ทันสมัย/เป็นกันเอง)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="total-chapters">จำนวนตอน (โดยประมาณ)</label>
+            <input type="number" id="total-chapters" placeholder="เช่น 5, 10 (ไม่ระบุได้)" min="1">
+        </div>
+        <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+            <input type="checkbox" id="story-only-mode" checked style="width: auto; margin: 0;">
+            <label for="story-only-mode" style="font-weight: normal; cursor: pointer;">โหมดเนื้อเรื่องล้วน (ไม่คุยเล่น/ไม่เกริ่นนำ)</label>
+        </div>
+        <button onclick="startChat()">เริ่มแต่งนิยาย</button>
+    </div>
+
+    <div id="chat-section">
+        <div class="chat-header-controls" style="padding: 10px; background-color: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div id="chapter-status" style="font-weight: bold; color: #4a90e2;"></div>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="exportChat()" style="background-color: #28a745; padding: 5px 10px; font-size: 0.9rem;">💾 บันทึก</button>
+                <button onclick="resetChat()" style="background-color: #dc3545; padding: 5px 10px; font-size: 0.9rem;">🔄 เริ่มใหม่</button>
+            </div>
+        </div>
+        <div id="chat-history"></div>
+        <div class="loading" id="loading-indicator">กำลังพิมพ์...</div>
+        <div class="input-area">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <button onclick="continueStory()" style="background-color: #ffc107; color: #333; font-weight: bold; font-size: 0.8rem;">⏩ แต่งต่อ (ฉากเดิม)</button>
+                <button onclick="nextChapter()" id="next-chapter-btn" style="background-color: #17a2b8; color: white; font-weight: bold; font-size: 0.8rem;">⏭️ ขึ้นตอนใหม่</button>
+            </div>
+            <input type="text" id="user-input" placeholder="พิมพ์ข้อความ..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">ส่ง</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_KEY = 'AIzaSyDUvr5l01Va5p3pr8jvEK3_0aRT1EYUaGs';
+    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + API_KEY;
+
+    let chatHistory = [];
+    let novelTitle = "";
+    let novelGenre = "";
+    let writingStyle = "literary";
+    let isStoryOnlyMode = true;
+    let totalChapters = 0;
+    let currentChapter = 1;
+
+    function startChat() {
+        novelTitle = document.getElementById('novel-title').value.trim();
+        novelGenre = document.getElementById('novel-genre').value.trim();
+        writingStyle = document.getElementById('writing-style').value;
+        const totalChaptersInput = document.getElementById('total-chapters').value;
+        totalChapters = totalChaptersInput ? parseInt(totalChaptersInput) : 0;
+        isStoryOnlyMode = document.getElementById('story-only-mode').checked;
+        currentChapter = 1;
+
+        if (!novelTitle || !novelGenre) {
+            alert("กรุณากรอกชื่อเรื่องและแนวเรื่องให้ครบถ้วน");
+            return;
+        }
+
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('chat-section').style.display = 'flex';
+        updateChapterDisplay();
+
+        // Initial system prompt setup
+        let initialPrompt = "";
+        let lengthInstruction = "";
+
+        if (totalChapters > 0) {
+            lengthInstruction = `4. **โครงสร้างเรื่อง:** นิยายเรื่องนี้มีความยาวประมาณ ${totalChapters} ตอน
+   - ขณะนี้คือ **ตอนที่ 1**
+   - ให้วางโครงเรื่องให้เหมาะสมกับความยาวที่กำหนด ไม่ยืดเยื้อหรือห้วนเกินไป`;
+        } else {
+            lengthInstruction = `4. **โครงสร้างเรื่อง:** แต่งไปเรื่อยๆ จนกว่าผู้ใช้จะสั่งให้จบ`;
+        }
+        
+        let styleInstruction = "";
+        if (writingStyle === 'literary') {
+            styleInstruction = `2. **คุณภาพภาษาไทยระดับสูงสุด (Masterpiece Level Thai Writing):**
+   - ใช้ภาษาไทยระดับวรรณกรรมที่สละสลวย งดงาม และประณีต (ราวกับนักเขียนรางวัลซีไรต์)
+   - การบรรยายต้องเห็นภาพชัดเจน (Vivid Imagery) เล่นกับประสาทสัมผัสทั้ง 5 (รูป, รส, กลิ่น, เสียง, สัมผัส)
+   - เลือกใช้คำศัพท์ (Word Choice) ที่คมคาย ลึกซึ้ง และหลากลาย ไม่ใช้คำซ้ำซาก
+   - หลีกเลี่ยงสำนวนแปล หรือรูปประโยคแบบต่างประเทศ ให้ใช้ลีลาภาษาไทยแท้ที่ร้อยเรียงอย่างไพเราะ
+   - การดำเนินเรื่องต้องมีจังหวะจะโคน (Pacing) ที่ดี ดึงดูดอารมณ์ผู้อ่านให้คล้อยตาม`;
+        } else {
+            styleInstruction = `2. **สไตล์ภาษาวัยรุ่นยุคใหม่ (Modern Teen Vibe):**
+   - ใช้ภาษาไทยแบบวัยรุ่น Gen Z ที่ทันสมัย เป็นธรรมชาติ เข้าถึงง่าย
+   - การบรรยายให้ความรู้สึกเหมือนอ่านนิยายออนไลน์ยอดฮิต หรือกระทู้เล่าเรื่องมันส์ๆ
+   - บทสนทนา (Dialogue) ต้องเรียล ใช้คำสแลงได้ตามความเหมาะสม (เช่น จึ้ง, ตึง, บูด, เฟียร์ส, ฉ่ำ ฯลฯ) แต่ยังคงสื่อสารรู้เรื่อง
+   - เดินเรื่องไว กระชับ ไม่ยืดเยาด น่าติดตาม
+   - ใส่อารมณ์ร่วมลงไปในการเล่าเรื่อง (Emotional & Relatable)`;
+        }
+
+        if (isStoryOnlyMode) {
+            initialPrompt = `ฉันต้องการแต่งนิยาย
+ชื่อเรื่อง: ${novelTitle}
+แนว: ${novelGenre}
+
+คำสั่งสำคัญสูงสุด (System Instruction):
+1. ให้เขียน **เฉพาะเนื้อเรื่องนิยาย** เท่านั้น ตัดส่วนที่ไม่ใช่นิยายออกทั้งหมด
+${styleInstruction}
+3. ห้ามมีคำทักทาย ห้ามเกริ่นนำ ห้ามถามกลับ เริ่มเล่าเรื่องทันที
+${lengthInstruction}`;
+        } else {
+            initialPrompt = `ฉันต้องการแต่งนิยาย
+ชื่อเรื่อง: ${novelTitle}
+แนว: ${novelGenre}
+ความยาว: ${totalChapters > 0 ? totalChapters + ' ตอน' : 'ไม่ระบุ'}
+
+สไตล์การเขียน: ${writingStyle === 'literary' ? 'ภาษาเทพ/วรรณกรรม' : 'ภาษาวัยรุ่น/ทันสมัย'}
+
+ช่วยเป็นคู่หูในการแต่งนิยายเรื่องนี้หน่อย เริ่มต้นด้วยการเสนอพล็อตเรื่องคร่าวๆ หรือฉากเปิดเรื่องที่น่าสนใจให้หน่อย`;
+        }
+
+        addMessageToUI(initialPrompt, 'user');
+        sendMessageToGemini(initialPrompt);
+    }
+    
+    function updateChapterDisplay() {
+        const statusDiv = document.getElementById('chapter-status');
+        if (totalChapters > 0) {
+            statusDiv.textContent = `ตอนที่ ${currentChapter} / ${totalChapters}`;
+            if (currentChapter >= totalChapters) {
+                document.getElementById('next-chapter-btn').textContent = "🏁 จบเรื่อง";
+            } else {
+                document.getElementById('next-chapter-btn').textContent = "⏭️ ขึ้นตอนใหม่";
+            }
+        } else {
+            statusDiv.textContent = `ตอนที่ ${currentChapter}`;
+        }
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        const inputField = document.getElementById('user-input');
+        const message = inputField.value.trim();
+
+        if (message) {
+            addMessageToUI(message, 'user');
+            inputField.value = '';
+            sendMessageToGemini(message);
+        }
+    }
+
+    function addMessageToUI(text, sender) {
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+        
+        if (sender === 'ai') {
+            // Parse Markdown for AI responses
+            messageDiv.innerHTML = marked.parse(text);
+        } else {
+            messageDiv.textContent = text;
+        }
+        
+        chatHistoryDiv.appendChild(messageDiv);
+        chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+    }
+
+    async function sendMessageToGemini(userMessage) {
+        const loadingIndicator = document.getElementById('loading-indicator');
+        loadingIndicator.style.display = 'block';
+
+        // Update history for context
+        chatHistory.push({
+            role: "user",
+            parts: [{ text: userMessage }]
+        });
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: chatHistory
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Error:', data.error);
+                addMessageToUI("เกิดข้อผิดพลาด: " + data.error.message, 'ai');
+            } else {
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                
+                // Add AI response to history
+                chatHistory.push({
+                    role: "model",
+                    parts: [{ text: aiResponse }]
+                });
+
+                addMessageToUI(aiResponse, 'ai');
+            }
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            addMessageToUI("เกิดข้อผิดพลาดในการเชื่อมต่อ", 'ai');
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
+    function exportChat() {
+        if (chatHistory.length === 0) {
+            alert("ยังไม่มีเนื้อหาที่จะบันทึก");
+            return;
+        }
+
+        let content = `ชื่อเรื่อง: ${novelTitle}\nแนว: ${novelGenre}\n\n------------------\n\n`;
+        
+        chatHistory.forEach(msg => {
+            const role = msg.role === 'user' ? 'คุณ' : 'AI';
+            content += `[${role}]:\n${msg.parts[0].text}\n\n`;
+        });
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${novelTitle || 'novel'}_chat_history.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function resetChat() {
+        if (confirm("คุณแน่ใจหรือไม่ว่าต้องการล้างแชทและเริ่มเรื่องใหม่? เนื้อหาปัจจุบันจะหายไปหากยังไม่ได้บันทึก")) {
+            chatHistory = [];
+            novelTitle = "";
+            novelGenre = "";
+            document.getElementById('chat-history').innerHTML = "";
+            document.getElementById('novel-title').value = "";
+            document.getElementById('novel-genre').value = "";
+            document.getElementById('chat-section').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'flex';
+        }
+    }
+
+    function continueStory() {
+        const prompt = writingStyle === 'literary' 
+            ? "ช่วยแต่งเนื้อเรื่องต่อจากเดิมให้หน่อย (คงคุณภาพภาษาวรรณกรรม)" 
+            : "เล่าต่อเลยวัยรุ่น! เอาให้มันส์ (คงสไตล์ภาษาวัยรุ่น)";
+        
+        addMessageToUI("⏩ แต่งต่อฉากเดิม...", 'user');
+        sendMessageToGemini(prompt);
+    }
+
+    function nextChapter() {
+        currentChapter++;
+        updateChapterDisplay();
+
+        let prompt = "";
+        if (totalChapters > 0 && currentChapter >= totalChapters) {
+             prompt = `ตอนนี้เข้าสู่ **ตอนจบ (ตอนที่ ${currentChapter})** แล้ว ให้เขียนบทสรุปของเรื่องราวทั้งหมด ขมวดปมทุกอย่าง และจบเรื่องอย่างสมบูรณ์`;
+        } else {
+             prompt = `เริ่มเขียน **ตอนที่ ${currentChapter}** ต่อจากเดิม ให้ดำเนินเรื่องเข้มข้นขึ้น`;
+        }
+
+        addMessageToUI(totalChapters > 0 && currentChapter >= totalChapters ? "🏁 เขียนตอนจบ..." : `⏭️ เริ่มตอนที่ ${currentChapter}...`, 'user');
+        sendMessageToGemini(prompt);
+    }
+</script>
+
+</body>
+</html>

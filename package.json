@@ -1,0 +1,14 @@
+{
+  "name": "chatainiyay",
+  "version": "1.0.0",
+  "description": "AI Novel Writing Assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_api.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.9"
+  }
+}
