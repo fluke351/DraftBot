@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fetch = require('node-fetch');
+require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,7 +15,11 @@ app.use(express.static(__dirname));
 app.post('/api/chat', async (req, res) => {
     try {
         const { prompt } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY || 'AIzaSyDUvr5l01Va5p3pr8jvEK3_0aRT1EYUaGs'; // Fallback for local dev
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey || apiKey === 'YOUR_NEW_API_KEY_HERE') {
+            throw new Error('API Key is missing or invalid. Please check your .env file.');
+        }
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
             method: 'POST',
