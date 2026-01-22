@@ -6,7 +6,7 @@ async function testApi() {
         const response = await fetch('http://localhost:3000/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: "ขอพล็อตนิยายแนวไซไฟอวกาศสั้นๆ 1 ย่อหน้า" })
+            body: JSON.stringify({ prompt: "ทดสอบการเชื่อมต่อ API อีกครั้ง" })
         });
 
         const data = await response.json();
