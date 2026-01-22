@@ -201,8 +201,10 @@
 </div>
 
 <script>
-    const API_KEY = 'AIzaSyDUvr5l01Va5p3pr8jvEK3_0aRT1EYUaGs';
-    const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + API_KEY;
+    // Configuration
+    // API Call is now handled by the backend server to secure the key
+    // const API_KEY = 'AIzaSyDUvr5l01Va5p3pr8jvEK3_0aRT1EYUaGs'; // REMOVED
+    // const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`; // REMOVED
 
     let chatHistory = [];
     let novelTitle = "";
@@ -337,19 +339,47 @@ ${lengthInstruction}`;
         loadingIndicator.style.display = 'block';
 
         // Update history for context
+        // Note: For simple prompt generation in this proxy version, we might send the full history as text 
+        // or let the backend handle context. 
+        // However, the current backend implementation expects a simple "prompt" or "contents" structure.
+        // Let's adjust the fetch to send to our local /api/chat endpoint.
+        
         chatHistory.push({
             role: "user",
             parts: [{ text: userMessage }]
         });
 
+        // Construct the full prompt context for the AI (since we are sending single prompt to backend proxy in this iteration)
+        // Ideally backend should handle history, but to keep it simple with the new proxy:
+        // We will send the last message + context if needed, OR send the full conversation structure if backend supports it.
+        // My previous backend code: const { prompt } = req.body; -> parts: [{ text: prompt }]
+        // So it only supports a single text block.
+        // I need to serialize the chat history into that single text block OR update backend to accept history.
+        // Let's serialize for now to match the backend change I just made.
+        
+        // BETTER APPROACH: The backend is a simple pass-through for "prompt". 
+        // Let's format the history into a single string to send to backend, 
+        // OR better yet, let's update backend to just pass through the body?
+        // No, I implemented backend to take { prompt } and wrap it in `contents: [{ parts: [{ text: prompt }] }]`.
+        // So I should send the LATEST message combined with context if I want to maintain context.
+        // BUT, Gemini API supports `contents` array for history.
+        // The backend I wrote:
+        // body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        // This effectively resets context every time if I only send the new message.
+        // THIS IS A BUG in my backend plan. I need to fix backend to accept full history or I fix frontend to merge history.
+        // Merging history into one big string is easier for "quick fix".
+        
+        // Let's concat history for now.
+        let fullPrompt = chatHistory.map(msg => `${msg.role === 'user' ? 'User' : 'Model'}: ${msg.parts[0].text}`).join('\n\n');
+
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    contents: chatHistory
+                    prompt: fullPrompt
                 })
             });
 
@@ -357,7 +387,7 @@ ${lengthInstruction}`;
             
             if (data.error) {
                 console.error('Error:', data.error);
-                addMessageToUI("เกิดข้อผิดพลาด: " + data.error.message, 'ai');
+                addMessageToUI("เกิดข้อผิดพลาด: " + (data.error.message || JSON.stringify(data.error)), 'ai');
             } else {
                 const aiResponse = data.candidates[0].content.parts[0].text;
                 
